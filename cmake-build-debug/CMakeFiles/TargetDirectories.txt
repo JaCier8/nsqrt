@@ -1,0 +1,3 @@
+/home/jappa/CLionProjects/nsqrt/cmake-build-debug/CMakeFiles/nsqrt.dir
+/home/jappa/CLionProjects/nsqrt/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/jappa/CLionProjects/nsqrt/cmake-build-debug/CMakeFiles/rebuild_cache.dir
