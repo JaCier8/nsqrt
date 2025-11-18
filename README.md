@@ -1,48 +1,35 @@
 # nsqrt
 
+**Autor: Jan Ciecierki**
+
 ## Opis
 
-`nsqrt` to projekt w języku C przeznaczony do wydajnego obliczania pierwiastka kwadratowego z bardzo dużych liczb całkowitych. Implementacja opiera się na algorytmach operujących bezpośrednio na reprezentacji bitowej liczb, co pozwala na obsługę typów wykraczających poza standardowe `double`.
+`nsqrt` to wysoce zoptymalizowany program do obliczania podłogi z pierwiastka kwadratowego z bardzo dużych liczb całkowitych. Rdzeń logiczny projektu jest zaimplementowany bezpośrednio w **asemblerze x86-64 (NASM)**, co zapewnia maksymalną wydajność operacji bitowych.
 
-Główna logika programu znajduje się w pliku `main.c` i obejmuje funkcje do obliczeń na liczbach 64-bitowych (`uint64_t`) oraz 128-bitowych (realizowanych za pomocą wskaźników na `uint64_t`).
+Projekt zawiera:
+* **`nsqrt.asm`**: Plik źródłowy asemblera zawierający główną, eksportowaną funkcję `nsqrt`.
+* **`main.c`**: Przykładowy program w C, służący jako test i demonstracja wywołania zewnętrznej funkcji asemblerowej `nsqrt`.
 
-## Funkcjonalności
+## Algorytm
 
-* **Obliczanie pierwiastka z `uint64_t`:** Implementacja funkcji `nsqrt` dla 64-bitowych liczb całkowitych bez znaku.
-* **Wsparcie dla 128-bitów:** Implementacja funkcji `nsqrt128` pozwalającej na obliczenia dla 128-bitowych liczb całkowitych.
-* **Optymalizacje bitowe:** Wykorzystanie makr i operacji bitowych (`IS_1`, `SET_1`, `SET_0`) do szybkiego przetwarzania danych.
-* **Standard C11:** Kod napisany jest w nowoczesnym standardzie C11.
+Implementacja w `nsqrt.asm` wykorzystuje klasyczny algorytm (podobny do dzielenia pisemnego) do obliczania pierwiastka kwadratowego. Kluczowe kroki algorytmu widoczne w kodzie to:
 
-## Wymagania systemowe
+1.  **Inicjalizacja**: Zerowanie rejestrów i pamięci wynikowej `Q`.
+2.  **Iteracja**: Pętla (`.petla`) wykonująca się `n` razy (dla `n` bitów).
+3.  **Obliczanie kandydata**: Obliczanie wartości `4^(n-j)` (w `.oblicz4`).
+4.  **Test i odjęcie**: Sprawdzenie, czy `X` (reszta) jest większe lub równe kandydatowi. Jeśli tak, kandydat jest odejmowany od `X` (w `.odejmij4` i `.braklo`).
+5.  **Porównanie z Q**: Porównanie `X` z aktualną wartością `Q` przesuniętą bitowo (w `.porRzQ`).
+6.  **Aktualizacja Q**: Jeśli warunki są spełnione, odpowiedni bit w `Q` jest ustawiany na 1 (w `.ustawQ`).
 
-Do zbudowania projektu potrzebne są:
-* **CMake** (wersja 3.31 lub nowsza)
-* Kompilator C wspierający standard C11 (np. GCC, Clang)
-* Narzędzie budowania (np. Ninja lub Make)
+## Interfejs API (C/C++)
 
-## Kompilacja i uruchamianie
+Funkcja asemblerowa `nsqrt` jest zgodna ze standardową konwencją wywołań x86-64 System V (używaną w Linuksie i macOS), co pozwala na jej bezpośrednie wywołanie z C.
 
-Projekt wykorzystuje system budowania CMake. Aby go skompilować, wykonaj poniższe kroki w terminalu:
-
-1.  **Utwórz katalog na pliki budowania:**
-    ```bash
-    mkdir build
-    cd build
-    ```
-
-2.  **Skonfiguruj projekt za pomocą CMake:**
-    ```bash
-    cmake ..
-    ```
-
-3.  **Zbuduj projekt:**
-    ```bash
-    cmake --build .
-    ```
-
-4.  **Uruchom program:**
-    Po pomyślnej kompilacji plik wykonywalny `nsqrt` znajdzie się w katalogu `build` (lub `cmake-build-debug`, jeśli używasz IDE takiego jak CLion).
-
-    ```bash
-    ./nsqrt
-    ```
+**Deklaracja w C:**
+```c
+/* * Oblicza pierwiastek kwadratowy z 'n'-bitowej liczby.
+ * Q - wskaźnik na pamięć wyjściową (wynik)
+ * X - wskaźnik na pamięć wejściową (liczba)
+ * n - liczba bitów (rozmiar X i Q)
+ */
+extern void nsqrt(void *Q, void *X, unsigned n);
